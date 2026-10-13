@@ -1815,6 +1815,64 @@ function copyEmailContent() {{
     var emailDiv =
         document.getElementById("email-content");
 
+    // Outlook may discard CSS classes/styles during paste.
+    // Copy computed formatting into inline styles before copying.
+    var styledElements = emailDiv.querySelectorAll("*");
+    styledElements.forEach(function (el) {{
+        var computed = window.getComputedStyle(el);
+
+        [
+            "color",
+            "background-color",
+            "font-family",
+            "font-size",
+            "font-weight",
+            "font-style",
+            "text-align",
+            "vertical-align",
+            "border",
+            "border-top",
+            "border-right",
+            "border-bottom",
+            "border-left",
+            "padding",
+            "white-space"
+        ].forEach(function (property) {{
+            var value = computed.getPropertyValue(property);
+            if (value) {{
+                el.style.setProperty(property, value);
+            }}
+        }});
+
+        // Explicitly preserve white text on dark-blue header/footer cells.
+        var bg = computed.backgroundColor.replace(/\\s/g, "");
+        if (
+            bg === "rgb(31,78,120)" ||
+            bg === "rgb(23,59,90)" ||
+            bg === "rgb(49,87,128)" ||
+            bg === "rgb(48,87,128)"
+        ) {{
+            el.style.setProperty("color", "#FFFFFF", "important");
+            el.setAttribute("bgcolor", "#1F4E78");
+        }}
+    }});
+
+    // Make table cell colors explicit for Outlook's HTML paste engine.
+    emailDiv.querySelectorAll("th, td").forEach(function (cell) {{
+        var computed = window.getComputedStyle(cell);
+        var bg = computed.backgroundColor.replace(/\\s/g, "");
+        if (
+            bg === "rgb(31,78,120)" ||
+            bg === "rgb(23,59,90)" ||
+            bg === "rgb(49,87,128)" ||
+            bg === "rgb(48,87,128)"
+        ) {{
+            cell.style.setProperty("background-color", "#1F4E78", "important");
+            cell.style.setProperty("color", "#FFFFFF", "important");
+            cell.setAttribute("bgcolor", "#1F4E78");
+        }}
+    }});
+
     var range =
         document.createRange();
 
